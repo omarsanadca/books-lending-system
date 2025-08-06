@@ -1,0 +1,23 @@
+[
+  {
+    "id": "xd4KI7dPWnia2n1x1Z62v",
+    "title": "7 habits",
+    "authorId": "v2JygY9Q1bRoeHR7ckvKp",
+    "year": 1990,
+    "isBorrowed": false
+  },
+  {
+    "id": "HYNek1X046YYvvKSxALS7",
+    "title": "8 habits",
+    "authorId": "v2JygY9Q1bRoeHR7ckvKp",
+    "year": 2011,
+    "isBorrowed": false
+  },
+  {
+    "id": "mAerAf4fNUBXCGdv2GPE9",
+    "title": "15 habits",
+    "authorId": "v2JygY9Q1bRoeHR7ckvKp",
+    "year": 2000,
+    "isBorrowed": false
+  }
+]

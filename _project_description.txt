@@ -1,0 +1,53 @@
+Library / Book-Lending System
+
+- Books (id, title, authorId, year, isBorrowed)
+- Authors (name, country)
+- Borrows (bookId, userName, borrowedAt, returnedAt)
+
+========================================
+
+- see https://www.npmjs.com/package/nanoid for generating ids
+- see new Date().toISOString()
+
+========================================
+
+- CRUD for [books]
+  - get("/")
+  - get("/:id")
+  - post()
+  - patch("/:id")
+  - delete("/:id")
+  
+  * query params
+    = get books sorted
+    = get borrowed books only
+    = get available books (not borrowed)
+
+========================================
+
+- CRUD for [Authors]
+  - get("/")
+  - get("/:id")
+  - post()
+  - patch("/:id")
+  - delete("/:id")
+
+  * query params
+    = filter authors on specific country
+
+========================================
+
+- CRUD for [Borrows]
+  - get("/")
+  - get("/:id")
+  - post()  // borrow a book
+  - patch("/:id/return") // return a book
+
+  * query params
+    = get late borrows, (if for example there is a borrow that lasted for more than a week and the book is not yet returned)
+
+========================================
+
+
+- make helpers for reading files read(table), write(table, record)
+- use try and catch to handle errors
