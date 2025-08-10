@@ -1,0 +1,24 @@
+[
+  {
+    "id": "4HVGEr1rlLiue64w1VyzN",
+    "bookId": "xd4KI7dPWnia2n1x1Z62v",
+    "userName": "Omar",
+    "borrowedAt": "2025-08-10T17:31:59.077Z",
+    "returnedAt": "2025-08-10T17:33:11.282Z",
+    "durationInDays": 0.0008357060185185185
+  },
+  {
+    "id": "ojwBS9cCEco5_uJ_igKzT",
+    "bookId": "HYNek1X046YYvvKSxALS7",
+    "userName": "Ahmed",
+    "borrowedAt": "2025-08-01T17:32:20.433Z",
+    "returnedAt": "2025-08-10T17:34:37.912Z",
+    "durationInDays": 9.00159119212963
+  },
+  {
+    "id": "SiXN4fLpO_8Q-d05yRWmc",
+    "bookId": "WZbxS9wIjO44hAmNKlWRV",
+    "userName": "Omar",
+    "borrowedAt": "2025-08-10T18:22:32.647Z"
+  }
+]

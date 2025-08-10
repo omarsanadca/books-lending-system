@@ -2,7 +2,7 @@ Library / Book-Lending System
 
 - Books (id, title, authorId, year, isBorrowed)
 - Authors (name, country)
-- Borrows (bookId, userName, borrowedAt, returnedAt)
+- Borrows (id, bookId, userName, borrowedAt, returnedAt)
 
 ========================================
 
@@ -40,7 +40,7 @@ Library / Book-Lending System
 - CRUD for [Borrows]
   - get("/")
   - get("/:id")
-  - post()  // borrow a book
+  - post() // borrow a book
   - patch("/:id/return") // return a book
 
   * query params
