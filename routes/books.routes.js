@@ -1,10 +1,10 @@
-import { nanoid } from "nanoid";
 import express from "express";
 
-import { clearAndWrite, read, write } from "../utils/file-utils.js";
 import { fixBody } from "../utils/fixBody.js";
 
 import db from "../utils/db.js";
+
+import { Book } from "../models/Book.js";
 
 const booksKeys = ["title", "authorId", "year", "isBorrowed"];
 
@@ -52,7 +52,11 @@ router.get("", async (req, res) => {
     //   }
     // }
 
-    const [books] = await db.execute("SELECT * FROM books;");
+    // const [books] = await db.execute("SELECT * FROM books;");
+
+    const books = await Book.findAll();
+
+    console.log(books.map((b) => b.toJSON()));
 
     res.json({ message: "books fetched successfully", books });
   } catch (err) {
@@ -67,23 +71,13 @@ router.get("/:id", async (req, res) => {
   try {
     const { id: bookId } = req.params;
 
-    // const books = await read("books");
+    const book = await Book.findByPk(bookId);
 
-    // const book = books.find((b) => b.id === bookId);
-
-    // if (!book) {
-    //   return res.status(404).json({ message: "Book Not Found" });
-    // }
-
-    const [books] = await db.execute("SELECT * FROM books where id = ?;", [
-      bookId,
-    ]);
-
-    if (books.length === 0) {
+    if (!book) {
       return res.status(404).json({ message: "Book not found!" });
     }
 
-    res.json({ message: "Fetched book", book: books[0] });
+    res.json({ message: "Fetched book", book });
   } catch (err) {
     console.log("Error when GET /books/:id -> ", err.message);
     res
@@ -114,14 +108,16 @@ router.post("", async (req, res) => {
 
     // await write("books", newBook);
 
-    const [result] = await db.execute(
-      "INSERT INTO books (title, year) VALUES (?, ?)",
-      [title, year]
-    );
+    // const [result] = await db.execute(
+    //   "INSERT INTO books (title, year) VALUES (?, ?)",
+    //   [title, year]
+    // );
+
+    const { dataValues } = await Book.create({ title, year, isBorrowed });
 
     res.status(201).json({
       message: "book created successfully",
-      book: { id: result.insertId, title, year },
+      book: dataValues,
     });
   } catch (err) {
     console.log("Error when POST /books/ -> ", err.message);
@@ -136,26 +132,24 @@ router.patch("/:id", async (req, res) => {
     const { id: bookId } = req.params;
     const booksData = fixBody(req.body, booksKeys);
 
-    // const books = await read("books");
+    // const [result] = await db.execute(
+    //   "UPDATE books SET year = ? WHERE id = ?",
+    //   [booksData.year, bookId]
+    // );
 
-    // const bookIndex = books.findIndex((b) => b.id === bookId);
+    const book = await Book.findByPk(bookId);
 
-    // if (bookIndex === -1) {
-    //   return res.status(404).json({ message: "Book Not Found" });
-    // }
+    if (!book) {
+      return res.status(404).json({ message: "Book not found!" });
+    }
 
-    // books[bookIndex] = { ...books[bookIndex], ...booksData };
+    for (const key in booksData) {
+      book[key] = booksData[key];
+    }
 
-    // await clearAndWrite("books", books);
+    await book.save();
 
-    const [result] = await db.execute(
-      "UPDATE books SET year = ? WHERE id = ?",
-      [booksData.year, bookId]
-    );
-
-    console.log(result);
-
-    res.json({ message: "book updated!", updatedBook: {} });
+    res.json({ message: "book updated!", updatedBook: book });
   } catch (err) {
     console.log("Error when PATCH /books/:id -> ", err.message);
     res
@@ -168,27 +162,15 @@ router.delete("/:id", async (req, res) => {
   try {
     const { id: bookId } = req.params;
 
-    // const books = await read("books");
+    const book = await Book.findByPk(bookId);
 
-    // const bookIndex = books.findIndex((b) => b.id === bookId);
-
-    // if (bookIndex === -1) {
-    //   return res.status(404).json({ message: "Book Not Found" });
-    // }
-
-    // books.splice(bookIndex, 1);
-
-    // clearAndWrite("books", books);
-
-    const [result] = await db.execute("DELETE FROM books WHERE id = ?", [
-      bookId,
-    ]);
-
-    if (result.affectedRows) {
-      res.json({ message: "book deleted successfully" });
-    } else {
-      res.status(404).json({ message: "book not found!" });
+    if (!book) {
+      return res.status(404).json({ message: "Book not found!" });
     }
+
+    await book.destroy();
+
+    res.json({ message: "Book deleted!" });
   } catch (err) {
     console.log("Error when DELETE /books/:id -> ", err.message);
     res
@@ -199,7 +181,7 @@ router.delete("/:id", async (req, res) => {
 
 router.delete("/", async (req, res) => {
   try {
-    const [result] = await db.execute("DELETE FROM books");
+    await Book.destroy({ where: { year: 2020 } });
 
     res.json({ message: "all books were deleted" });
   } catch (err) {

@@ -4,6 +4,10 @@ import booksRoutes from "./routes/books.routes.js";
 import authorsRoutes from "./routes/authors.routes.js";
 import borrowsRoutes from "./routes/borrows.routes.js";
 
+import sequelize from "./utils/db.js";
+
+import { Book } from "./models/Book.js";
+
 const app = express();
 
 app.use(express.json());
@@ -21,6 +25,14 @@ app.use((req, res) => {
 });
 
 const PORT = 4000;
-app.listen(PORT, () => {
-  console.log(`server running on  http://localhost${PORT} 🚀`);
-});
+
+sequelize
+  .sync()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`server running on  http://localhost${PORT} 🚀`);
+    });
+  })
+  .catch((err) => {
+    console.log(`Error connecting to db ❌ : ${err.message}`);
+  });
