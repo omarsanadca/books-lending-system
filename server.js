@@ -7,6 +7,8 @@ import borrowsRoutes from "./routes/borrows.routes.js";
 import sequelize from "./utils/db.js";
 
 import { Book } from "./models/Book.js";
+import { Author } from "./models/Author.js";
+import { Borrow } from "./models/Borrow.js";
 
 const app = express();
 
@@ -26,7 +28,15 @@ app.use((req, res) => {
 
 const PORT = 4000;
 
+/* relationships */
+Author.hasMany(Book);
+Book.belongsTo(Author);
+
+Book.hasMany(Borrow);
+Borrow.belongsTo(Book);
+
 sequelize
+  // .sync({ force: true })
   .sync()
   .then(() => {
     app.listen(PORT, () => {

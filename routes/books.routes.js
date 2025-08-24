@@ -5,6 +5,7 @@ import { fixBody } from "../utils/fixBody.js";
 import db from "../utils/db.js";
 
 import { Book } from "../models/Book.js";
+import { Author } from "../models/Author.js";
 
 const booksKeys = ["title", "authorId", "year", "isBorrowed"];
 
@@ -12,48 +13,6 @@ const router = express.Router();
 
 router.get("", async (req, res) => {
   try {
-    // let books = await read("books");
-
-    // const authors = await read("authors");
-
-    // books = books.map((b) => {
-    //   const newBook = { ...b };
-    //   const authorId = newBook.authorId;
-    //   delete newBook.authorId;
-
-    //   const authorData = authors.find((a) => a.id === authorId);
-
-    //   newBook.author = authorData;
-
-    //   return newBook;
-    // });
-
-    // const { sort, borrowed } = req.query;
-
-    // if (sort) {
-    //   if (sort === "asc") {
-    //     books.sort((a, b) => {
-    //       if (a.title < b.title) return -1;
-    //       return 1;
-    //     });
-    //   } else {
-    //     books.sort((a, b) => {
-    //       if (a.title > b.title) return -1;
-    //       return 1;
-    //     });
-    //   }
-    // }
-
-    // if (borrowed !== undefined) {
-    //   if (borrowed === "true") {
-    //     books = books.filter((b) => b.isBorrowed);
-    //   } else {
-    //     books = books.filter((b) => !b.isBorrowed);
-    //   }
-    // }
-
-    // const [books] = await db.execute("SELECT * FROM books;");
-
     const books = await Book.findAll();
 
     console.log(books.map((b) => b.toJSON()));
@@ -88,7 +47,7 @@ router.get("/:id", async (req, res) => {
 
 router.post("", async (req, res) => {
   try {
-    const booksData = fixBody(req.body, booksKeys);
+    const booksData = req.body;
 
     const { title, authorId, year, isBorrowed } = booksData;
 
@@ -96,34 +55,30 @@ router.post("", async (req, res) => {
       return res.status(400).json({ message: "invalid arguments" });
     }
 
-    // const authors = await read("authors");
+    const author = await Author.findByPk(authorId);
 
-    // const authorIndex = authors.findIndex((a) => a.id === authorId);
+    if (!author) {
+      return res.status(404).json({ message: "Author not found!" });
+    }
 
-    // if (authorIndex === -1) {
-    //   return res.status(404).json({ message: "author not found" });
-    // }
+    // const newBook = Book.build(req.body, {
+    //   fields: ["title", "year", "isBorrowed"],
+    // });
 
-    // const newBook = { id: nanoid(), ...booksData };
+    // const result = await author.addBook(newBook);
 
-    // await write("books", newBook);
-
-    // const [result] = await db.execute(
-    //   "INSERT INTO books (title, year) VALUES (?, ?)",
-    //   [title, year]
-    // );
-
-    const { dataValues } = await Book.create({ title, year, isBorrowed });
+    await author.createBook(booksData, { fields: booksKeys });
 
     res.status(201).json({
       message: "book created successfully",
-      book: dataValues,
+      // book: author.getBooks({where}),
     });
   } catch (err) {
     console.log("Error when POST /books/ -> ", err.message);
-    res
-      .status(500)
-      .json({ message: "Internal Server Error, please try again later." });
+    res.status(500).json({
+      message: "Internal Server Error, please try again later.",
+      errMessage: err.message,
+    });
   }
 });
 
@@ -132,29 +87,31 @@ router.patch("/:id", async (req, res) => {
     const { id: bookId } = req.params;
     const booksData = fixBody(req.body, booksKeys);
 
-    // const [result] = await db.execute(
-    //   "UPDATE books SET year = ? WHERE id = ?",
-    //   [booksData.year, bookId]
-    // );
-
     const book = await Book.findByPk(bookId);
 
     if (!book) {
       return res.status(404).json({ message: "Book not found!" });
     }
 
-    for (const key in booksData) {
-      book[key] = booksData[key];
-    }
+    book.set(booksData);
 
     await book.save();
+
+    if (booksData.authorId) {
+      const author = await Author.findByPk(booksData.authorId);
+      if (!author) {
+        return res.status(404).json({ message: "Author not found!" });
+      }
+      await book.setAuthor(author);
+    }
 
     res.json({ message: "book updated!", updatedBook: book });
   } catch (err) {
     console.log("Error when PATCH /books/:id -> ", err.message);
-    res
-      .status(500)
-      .json({ message: "Internal Server Error, please try again later." });
+    res.status(500).json({
+      message: "Internal Server Error, please try again later.",
+      errMessage: err.message,
+    });
   }
 });
 

@@ -1,6 +1,8 @@
 import express from "express";
 import { nanoid } from "nanoid";
 
+import { Author } from "../models/Author.js";
+
 const authorKeys = ["name", "country"];
 
 import { read, write, clearAndWrite } from "../utils/file-utils.js";
@@ -9,75 +11,75 @@ import { fixBody } from "../utils/fixBody.js";
 const router = express.Router();
 
 router.get("", async (req, res) => {
-  const authors = await read("authors");
+  const authors = await Author.findAll();
 
   res.json({ message: "successfully fetched all authors", authors });
 });
 
 router.get("/:id", async (req, res) => {
-  const { id: authorId } = req.params;
-  const authors = await read("authors");
+  // const [author] = await Author.findAll({ where: { id: req.params.id } });
+  const author = await Author.findByPk(req.params.id);
 
-  const author = authors.find((aut) => aut.id === authorId);
+  const books = await author.getBooks();
 
-  if (!author) {
-    return res.status(404).json({ message: "author not found" });
+  if (author === null) {
+    return res.status(404).json({ message: "Author not found!" });
   }
 
-  res.json({ message: "get author successfully", author });
+  res.json({
+    message: "get author successfully",
+    author: {
+      ...author.toJSON(),
+      books,
+    },
+  });
 });
 
 router.post("", async (req, res) => {
-  const { name, country } = fixBody(req.body, authorKeys);
+  try {
+    await Author.create(req.body, {
+      fields: authorKeys,
+    });
 
-  // validate if there are name and country
-  if (!name || !country) {
-    return res.status(400).json({ message: "name and country are required" });
+    res.status(201).json({ message: "author added successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error!", errMessage: err.message });
   }
-
-  const newAuthor = { id: nanoid(), name, country };
-
-  await write("authors", newAuthor);
-
-  res.status(201).json({ message: "author added successfully" });
 });
 
 router.patch("/:id", async (req, res) => {
   const { id: authorId } = req.params;
-  const authorData = fixBody(req.body, authorKeys);
 
-  const authors = await read("authors");
+  try {
+    const author = await Author.findByPk(authorId);
 
-  const authorIdx = authors.findIndex((a) => a.id === authorId);
+    if (author === null) {
+      return res.status(404).json({ message: "Author not found!" });
+    }
 
-  if (authorIdx === -1) {
-    return res.status(404).json({ message: "author not found" });
+    const updatedAuthor = await author.update(req.body, {
+      fields: authorKeys,
+    });
+
+    res.json({
+      message: "author updated successfully",
+      updatedAuthor,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error!", errMessage: err.message });
   }
-
-  authors[authorIdx] = { ...authors[authorIdx], ...authorData };
-
-  await clearAndWrite("authors", authors);
-
-  res.json({
-    message: "author updated successfully",
-    updateAuthor: authors[authorIdx],
-  });
 });
 
 router.delete("/:id", async (req, res) => {
   const { id: authorId } = req.params;
 
-  const authors = await read("authors");
+  const author = await Author.findByPk(authorId);
 
-  const authorIdx = authors.findIndex((a) => a.id === authorId);
-
-  if (authorIdx === -1) {
-    return res.status(404).json({ message: "author not found" });
+  if (author === null) {
+    return res.status(404).json({ message: "Author not found!" });
   }
 
-  authors.splice(authorIdx, 1);
-
-  await clearAndWrite("authors", authors);
+  await author.destroy();
 
   res.json({
     message: "author deleted successfully",
